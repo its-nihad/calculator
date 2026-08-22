@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matrix — PGDS-26</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --chassis-1: #2c2b28;
+    --chassis-2: #1a1917;
+    --chassis-edge: #3d3b36;
+    --brass: #c9a péri76a;
+    --brass: #c9a76a;
+    --brass-bright: #e6c98a;
+    --brass-dim: #9c7f4f;
+    --glass-bg-1: #0f1a14;
+    --glass-bg-2: #08110d;
+    --amber: #e8b04f;
+    --amber-dim: #7a5a28;
+    --key-body-1: #37352f;
+    --key-body-2: #232120;
+    --key-body-edge: #48453c;
+    --op-1: #4a3a2a;
+    --op-2: #332818;
+    --eq-1: #c9a76a;
+    --eq-2: #9c7f4f;
+    --text-warm: #ded6c4;
+    --text-dim: #8c8577;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse at 50% -10%, #3a3833 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 110%, #14130f 0%, transparent 60%),
+      #0a0908;
+    font-family: 'Sora', sans-serif;
+    padding: 28px;
+  }
+
+  .calculator {
+    width: 100%;
+    max-width: 350px;
+    background:
+      linear-gradient(155deg, var(--chassis-1) 0%, var(--chassis-2) 65%);
+    border-radius: 26px;
+    padding: 22px 20px 28px;
+    position: relative;
+    box-shadow:
+      0 40px 80px -24px rgba(0,0,0,0.75),
+      0 1px 0 rgba(255,255,255,0.06) inset,
+      0 -10px 20px rgba(0,0,0,0.4) inset,
+      0 0 0 1px var(--chassis-edge);
+  }
+
+  .calculator::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 26px;
+    padding: 1px;
+    background: linear-gradient(155deg, rgba(255,255,255,0.10), rgba(255,255,255,0) 30%, rgba(255,255,255,0) 70%, rgba(255,255,255,0.04));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .brand {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 4px 8px 16px;
+  }
+
+  .brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: 1px;
+    color: var(--brass-bright);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+
+  .brand-model {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+  }
+
+  .screen-housing {
+    background: var(--chassis-2);
+    border-radius: 12px;
+    padding: 3px;
+    margin-bottom: 20px;
+    box-shadow:
+      0 6px 16px rgba(0,0,0,0.5) inset,
+      0 0 0 1px rgba(201,167,106,0.15);
+  }
+
+  .screen {
+    background: linear-gradient(165deg, var(--glass-bg-1), var(--glass-bg-2));
+    border-radius: 9px;
+    padding: 20px 16px 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5) inset;
+  }
+
+  .screen::after {
+    content: '';
+    position: absolute;
+    top: -40%;
+    left: -20%;
+    width: 80%;
+    height: 60%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent 70%);
+    transform: rotate(-8deg);
+    pointer-events: none;
+  }
+
+  .screen-expr {
+    min-height: 16px;
+    text-align: right;
+    color: var(--amber-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    z-index: 1;
+  }
+
+  .screen-result {
+    text-align: right;
+    color: var(--amber);
+    font-family: 'Space Mono', monospace;
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 14px rgba(232,176,79,0.35);
+    position: relative;
+    z-index: 1;
+  }
+
+  .keys {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 11px;
+  }
+
+  button {
+    appearance: none;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Sora', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-warm);
+    padding: 17px 0;
+    cursor: pointer;
+    background: linear-gradient(180deg, var(--key-body-1), var(--key-body-2));
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.08) inset,
+      0 3px 0 rgba(0,0,0,0.5),
+      0 5px 8px rgba(0,0,0,0.3),
+      0 0 0 1px var(--key-body-edge);
+    transition: transform 0.05s ease, box-shadow 0.05s ease;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  button:active,
+  button.pressed {
+    transform: translateY(3px);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.05) inset,
+      0 0 0 rgba(0,0,0,0.5),
+      0 1px 2px rgba(0,0,0,0.3),
+      0 0 0 1px var(--key-body-edge);
+  }
+
+  button.fn {
+    color: var(--brass-bright);
+    background: linear-gradient(180deg, #3a362c, #26221a);
+    font-size: 15px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.06) inset,
+      0 3px 0 rgba(0,0,0,0.5),
+      0 5px 8px rgba(0,0,0,0.3),
+      0 0 0 1px rgba(201,167,106,0.25);
+  }
+
+  button.op {
+    background: linear-gradient(180deg, var(--op-1), var(--op-2));
+    color: var(--brass-bright);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.08) inset,
+      0 3px 0 rgba(0,0,0,0.5),
+      0 5px 8px rgba(0,0,0,0.3),
+      0 0 0 1px rgba(201,167,106,0.2);
+  }
+
+  button.eq {
+    background: linear-gradient(180deg, var(--eq-1), var(--eq-2));
+    color: #241d10;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.25) inset,
+      0 3px 0 rgba(0,0,0,0.5),
+      0 5px 10px rgba(201,167,106,0.25),
+      0 0 0 1px rgba(0,0,0,0.2);
+  }
+
+  button.zero {
+    grid-column: span 2;
+  }
+
+  @media (max-width: 360px) {
+    .screen-result { font-size: 32px; }
+    button { padding: 15px 0; font-size: 16px; }
+    .brand-name { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="calculator">
+  <div class="brand">
+    <span class="brand-name">Matrix</span>
+    <span class="brand-model">PGDS-26</span>
+  </div>
+
+  <div class="screen-housing">
+    <div class="screen">
+      <div class="screen-expr" id="expr">&nbsp;</div>
+      <div class="screen-result" id="result">0</div>
+    </div>
+  </div>
+
+  <div class="keys">
+    <button class="fn" data-action="clear">C</button>
+    <button class="fn" data-action="sign">±</button>
+    <button class="fn" data-action="percent">%</button>
+    <button class="op" data-action="divide">÷</button>
+
+    <button data-digit="7">7</button>
+    <button data-digit="8">8</button>
+    <button data-digit="9">9</button>
+    <button class="op" data-action="multiply">×</button>
+
+    <button data-digit="4">4</button>
+    <button data-digit="5">5</button>
+    <button data-digit="6">6</button>
+    <button class="op" data-action="subtract">−</button>
+
+    <button data-digit="1">1</button>
+    <button data-digit="2">2</button>
+    <button data-digit="3">3</button>
+    <button class="op" data-action="add">+</button>
+
+    <button class="zero" data-digit="0">0</button>
+    <button data-action="decimal">.</button>
+    <button class="eq" data-action="equals">=</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const exprEl = document.getElementById('expr');
+  const resultEl = document.getElementById('result');
+
+  let current = '0';
+  let previous = null;
+  let operator = null;
+  let overwrite = true;
+  let justEvaluated = false;
+
+  const OP_SYMBOL = { add: '+', subtract: '−', multiply: '×', divide: '÷' };
+
+  function formatNumber(numStr) {
+    if (numStr === 'Error') return numStr;
+    const num = parseFloat(numStr);
+    if (!isFinite(num)) return 'Error';
+
+    let str = num.toString();
+    if (str.length > 12) {
+      if (Math.abs(num) >= 1e12 || (Math.abs(num) < 1e-6 && num !== 0)) {
+        str = num.toExponential(5);
+      } else {
+        str = parseFloat(num.toPrecision(10)).toString();
+      }
+    }
+    return str;
+  }
+
+  function updateDisplay() {
+    resultEl.textContent = formatNumber(current);
+    if (operator && previous !== null) {
+      exprEl.textContent = `${formatNumber(previous)} ${OP_SYMBOL[operator]}`;
+    } else {
+      exprEl.textContent = '\u00A0';
+    }
+  }
+
+  function inputDigit(d) {
+    if (justEvaluated) {
+      current = '0';
+      previous = null;
+      operator = null;
+      overwrite = true;
+      justEvaluated = false;
+    }
+    if (overwrite || current === '0') {
+      current = d === '0' && overwrite === false ? current + d : d;
+      overwrite = false;
+    } else {
+      if (current.replace('-', '').replace('.', '').length >= 12) return;
+      current += d;
+    }
+    updateDisplay();
+  }
+
+  function inputDecimal() {
+    if (justEvaluated) {
+      current = '0';
+      previous = null;
+      operator = null;
+      overwrite = false;
+      justEvaluated = false;
+    }
+    if (overwrite) {
+      current = '0.';
+      overwrite = false;
+    } else if (!current.includes('.')) {
+      current += '.';
+    }
+    updateDisplay();
+  }
+
+  function clearAll() {
+    current = '0';
+    previous = null;
+    operator = null;
+    overwrite = true;
+    justEvaluated = false;
+    updateDisplay();
+  }
+
+  function toggleSign() {
+    if (current === '0') return;
+    current = current.startsWith('-') ? current.slice(1) : '-' + current;
+    updateDisplay();
+  }
+
+  function toPercent() {
+    current = (parseFloat(current) / 100).toString();
+    updateDisplay();
+  }
+
+  function compute(a, b, op) {
+    switch (op) {
+      case 'add': return a + b;
+      case 'subtract': return a - b;
+      case 'multiply': return a * b;
+      case 'divide': return b === 0 ? NaN : a / b;
+      default: return b;
+    }
+  }
+
+  function setOperator(nextOp) {
+    if (operator && !overwrite) {
+      evaluate();
+      previous = parseFloat(current);
+    } else {
+      previous = parseFloat(current);
+    }
+    operator = nextOp;
+    overwrite = true;
+    justEvaluated = false;
+    updateDisplay();
+  }
+
+  function evaluate() {
+    if (operator === null || previous === null) return;
+    const a = previous;
+    const b = parseFloat(current);
+    const res = compute(a, b, operator);
+    current = isNaN(res) ? 'Error' : res.toString();
+    operator = null;
+    previous = null;
+    overwrite = true;
+    justEvaluated = true;
+    updateDisplay();
+  }
+
+  function flashKey(el) {
+    if (!el) return;
+    el.classList.add('pressed');
+    setTimeout(() => el.classList.remove('pressed'), 90);
+  }
+
+  document.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const digit = btn.getAttribute('data-digit');
+      const action = btn.getAttribute('data-action');
+      if (digit !== null) {
+        inputDigit(digit);
+      } else if (action === 'decimal') {
+        inputDecimal();
+      } else if (action === 'clear') {
+        clearAll();
+      } else if (action === 'sign') {
+        toggleSign();
+      } else if (action === 'percent') {
+        toPercent();
+      } else if (action === 'equals') {
+        evaluate();
+      } else if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
+        setOperator(action);
+      }
+    });
+  });
+
+  const KEY_MAP = {
+    '+': 'add', '-': 'subtract', '*': 'multiply', 'x': 'multiply',
+    '/': 'divide'
+  };
+
+  window.addEventListener('keydown', (e) => {
+    const k = e.key;
+    let btn = null;
+
+    if (/^[0-9]$/.test(k)) {
+      inputDigit(k);
+      btn = document.querySelector(`[data-digit="${k}"]`);
+    } else if (k === '.') {
+      inputDecimal();
+      btn = document.querySelector('[data-action="decimal"]');
+    } else if (KEY_MAP[k]) {
+      setOperator(KEY_MAP[k]);
+      btn = document.querySelector(`[data-action="${KEY_MAP[k]}"]`);
+    } else if (k === 'Enter' || k === '=') {
+      e.preventDefault();
+      evaluate();
+      btn = document.querySelector('[data-action="equals"]');
+    } else if (k === 'Escape') {
+      clearAll();
+      btn = document.querySelector('[data-action="clear"]');
+    } else if (k === 'Backspace') {
+      if (!overwrite && current.length > 1) {
+        current = current.slice(0, -1);
+      } else {
+        current = '0';
+        overwrite = true;
+      }
+      updateDisplay();
+    } else if (k === '%') {
+      toPercent();
+      btn = document.querySelector('[data-action="percent"]');
+    }
+
+    flashKey(btn);
+  });
+
+  updateDisplay();
+})();
+</script>
+
+</body>
+</html>
